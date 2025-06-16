@@ -1,0 +1,270 @@
+/* ESTILOS GERAIS */
+
+body {
+    background-color: #1E1E2F;
+    color: #E0E0E0;
+    font-family: 'Segoe UI', sans-serif;
+    margin: 0;
+    padding: 20px;
+}
+
+h1, h2, h3 {
+    color: #C084FC;
+    font-family: 'Segoe UI Semibold', sans-serif;
+    text-align: center;
+}
+
+label {
+    display: block;
+    margin-top: 10px;
+    color: #A78BFA;
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+
+input, select, textarea {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #8B5CF6;
+    border-radius: 8px;
+    background-color: #1F1F30;
+    color: #F3F4F6;
+    box-sizing: border-box;
+}
+
+a {
+    color: #A78BFA;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+button, .btn-link {
+    background-color: #8B5CF6;
+    color: #F3F4F6;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    text-align: center;
+}
+
+button:hover, .btn-link:hover {
+    background-color: #7C3AED;
+    transform: scale(1.03);
+}
+
+.btn-link {
+    display: inline-block;
+    margin-top: 15px;
+    text-decoration: none;
+}
+
+/* PAINÉIS  */
+
+.painel-roxo {
+    background-color: #2A2A40;
+    color: #E0E0E0;
+    padding: 20px;
+    border-radius: 15px;
+    max-width: 400px;
+    margin: 0 auto;
+    box-shadow: 0 0 12px rgba(139, 92, 246, 0.3);
+}
+
+.painel-lavanda {
+    background-color: #2A2A40;
+    color: #F3F4F6;
+    padding: 25px;
+    border-radius: 15px;
+    max-width: 450px;
+    margin: 20px auto;
+    box-shadow: 0 0 12px rgba(139, 92, 246, 0.2);
+}
+
+.painel-comandas {
+    background-color: #2A2A40;
+    color: #F3F4F6;
+    padding: 25px;
+    border-radius: 15px;
+    max-width: 800px;
+    margin: 20px auto;
+    box-shadow: 0 0 12px rgba(139, 92, 246, 0.2);
+}
+
+/* TABELAS */
+
+table, .tabela {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    background-color: #1F1F30;
+    color: #F3F4F6;
+}
+
+table th, table td, .tabela th, .tabela td {
+    border: 1px solid #8B5CF6;
+    padding: 10px;
+    text-align: center;
+}
+
+/* STATUS E MENSAGENS  */
+
+.erro {
+    color: #F87171;
+    font-weight: bold;
+    margin-top: 10px;
+}
+
+.status-aberta {
+    color: #4ADE80;
+    font-weight: bold;
+}
+
+.status-fechada {
+    color: #9CA3AF;
+    font-weight: bold;
+}
+
+/* LOGIN  */
+
+
+.painel-login {
+    background-color: #2A2A40;
+    color: #F3F4F6;
+    padding: 20px; /* reduzido */
+    border-radius: 15px;
+    max-width: 320px; /* levemente mais compacto */
+    margin: 10px auto; /* menos espaço acima */
+    box-shadow: 0 0 15px rgba(139, 92, 246, 0.25);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.logo-login {
+    width: 160px;
+    height: auto;
+    margin-bottom: 10px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.painel-login label {
+    margin-top: 10px;
+    margin-bottom: 8px;
+    align-self: flex-start;
+    color: #A78BFA;
+    font-weight: bold;
+}
+
+.painel-login input {
+    width: 100%;
+    padding: 8px 10px;
+    margin-bottom: 10px;
+    border: 1px solid #8B5CF6;
+    border-radius: 8px;
+    background-color: #1F1F30;
+    color: #F3F4F6;
+    box-sizing: border-box;
+}
+
+.btn-entrar-container {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin-top: 15px;
+}
+
+.btn-entrar {
+    width: 100%;
+    max-width: 220px;
+    padding: 10px 0;
+    background-color: #8B5CF6;
+    color: #F3F4F6;
+    border: none;
+    border-radius: 10px;
+    font-weight: bold;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.btn-entrar:hover {
+    background-color: #7C3AED;
+    transform: scale(1.03);
+}
+
+.btn-secundario {
+    margin-top: 15px;
+    font-size: 14px;
+    color: #A78BFA;
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-decoration: underline;
+    transition: color 0.2s ease;
+}
+
+.btn-secundario:hover {
+    color: #C084FC;
+}
+
+/* MENU PRINCIPAL  */
+
+.painel-menu {
+    background-color: #2A2A40;
+    color: #F3F4F6;
+    padding: 20px;
+    border-radius: 15px;
+    max-width: 360px;
+    margin: 20px auto;
+    box-shadow: 0 0 15px rgba(139, 92, 246, 0.25);
+    text-align: center;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.logo-menu {
+    width: 160px;
+    height: auto;
+    margin-bottom: 15px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.menu-botoes {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: center;
+    margin-top: 10px;
+}
+
+.btn-menu {
+    background-color: #8B5CF6;
+    color: #F3F4F6;
+    padding: 12px 25px;
+    border: none;
+    border-radius: 12px;
+    font-weight: bold;
+    font-size: 16px;
+    text-decoration: none;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    width: 100%;
+    max-width: 180px;
+    text-align: center;
+}
+
+.btn-menu:hover {
+    background-color: #7C3AED;
+    transform: scale(1.03);
+}

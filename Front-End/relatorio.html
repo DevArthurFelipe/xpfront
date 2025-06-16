@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="PT-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Relatório de Vendas</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+<div class="painel-lavanda">
+    <h1>Relatório de Vendas - <span id="dataRelatorio"></span></h1>
+
+    <div>
+        <label for="dataInput">Selecionar Data:</label>
+        <input type="date" id="dataInput">
+        <button id="gerarRelatorioBtn">Gerar Relatório</button>
+    </div>
+
+    <table class="tabela">
+        <thead>
+        <tr>
+            <th>Mesa</th>
+            <th>Tipo Consumo</th>
+            <th>Itens</th>
+            <th>Total</th>
+        </tr>
+        </thead>
+        <tbody id="comandasTableBody">
+        </tbody>
+    </table>
+
+    <h3>Total Vendido no Dia: R$ <span id="totalVendas">0,00</span></h3>
+
+    <p id="errorMessage" class="erro" style="display: none;"></p>
+
+    <a href="/menu.html" class="btn-link">Voltar ao Menu</a>
+</div>
+
+<script>
+    const dataRelatorioSpan = document.getElementById('dataRelatorio');
+    const dataInput = document.getElementById('dataInput');
+    const gerarRelatorioBtn = document.getElementById('gerarRelatorioBtn');
+    const comandasTableBody = document.getElementById('comandasTableBody');
+    const totalVendasSpan = document.getElementById('totalVendas');
+    const errorMessageDiv = document.getElementById('errorMessage');
+
+    async function carregarRelatorio(data = null) {
+        errorMessageDiv.textContent = '';
+        errorMessageDiv.style.display = 'none';
+        comandasTableBody.innerHTML = '';
+
+        let url = 'http://localhost:8080/api/relatorio';
+        if (data) {
+            url += `?data=${data}`;
+        }
+
+        try {
+            const response = await fetch(url);
+            if (response.ok) {
+                const relatorio = await response.json();
+
+                dataRelatorioSpan.textContent = relatorio.data;
+                totalVendasSpan.textContent = relatorio.totalVendas.toFixed(2).replace('.', ',');
+
+                if (relatorio.comandas && relatorio.comandas.length > 0) {
+                    relatorio.comandas.forEach(comanda => {
+                        const row = document.createElement('tr');
+
+                        const itensHtml = comanda.itens.map(item => {
+                const nome = item.itemCardapio ? item.itemCardapio.nome : 'Item não encontrado';
+                const preco = item.itemCardapio ? item.itemCardapio.preco : 0;
+                return `<li>${item.quantidade}x ${nome} - R$ ${preco.toFixed(2).replace('.', ',')}</li>`;
+            }).join('');
+
+                        row.innerHTML = `
+                            <td>${comanda.mesa}</td>
+                            <td>${comanda.tipoConsumo}</td>
+                            <td><ul>${itensHtml}</ul></td>
+                            <td>R$ ${relatorio.totaisPorComanda[comanda.id].toFixed(2).replace('.', ',')}</td>
+                        `;
+                        comandasTableBody.appendChild(row);
+                    });
+                } else {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `<td colspan="4">Nenhuma comanda fechada nesta data.</td>`;
+                    comandasTableBody.appendChild(row);
+                }
+
+            } else {
+                const errorText = await response.text();
+                errorMessageDiv.textContent = `Erro ao carregar relatório: ${errorText}`;
+                errorMessageDiv.style.display = 'block';
+            }
+        } catch (error) {
+            console.error('Erro de rede:', error);
+            errorMessageDiv.textContent = 'Erro de conexão ao carregar relatório.';
+            errorMessageDiv.style.display = 'block';
+        }
+    }
+
+    const today = new Date().toISOString().split('T')[0];
+    dataInput.value = today;
+
+    gerarRelatorioBtn.addEventListener('click', () => {
+        carregarRelatorio(dataInput.value);
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+        carregarRelatorio(dataInput.value);
+    });
+</script>
+
+</body>
+</html>

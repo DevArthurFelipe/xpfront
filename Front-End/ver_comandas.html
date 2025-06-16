@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="PT-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Ver Comandas</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+</head>
+<body>
+
+<div class="painel-comandas">
+    <h1>Comandas Abertas</h1>
+
+    <table id="comandasTable">
+        <thead>
+        <tr>
+            <th>Mesa</th>
+            <th>Tipo Consumo</th>
+            <th>Observação</th>
+            <th>Status</th>
+            <th>Itens</th>
+            <th>Ação</th>
+        </tr>
+        </thead>
+        <tbody id="comandasTableBody">
+        </tbody>
+    </table>
+
+    <br>
+    <a href="/menu.html" class="btn-link">Voltar ao Menu</a>
+
+    <p id="errorMessage" class="erro" style="display: none;"></p>
+</div>
+
+<script>
+    const COMANDAS_API_URL = 'http://localhost:8080/api/comandas';
+    const comandasTableBody = document.getElementById('comandasTableBody');
+    const errorMessageDiv = document.getElementById('errorMessage');
+
+    function renderizarComanda(comanda) {
+        const itensHTML = comanda.itens.map(item => {
+        // Acessamos o nome e o preço através do objeto "itemCardapio"
+        const nome = item.itemCardapio ? item.itemCardapio.nome : 'Item não encontrado';
+        const preco = item.itemCardapio ? item.itemCardapio.preco : 0;
+        return `<li>${item.quantidade}x ${nome} - R$ ${preco.toFixed(2).replace('.', ',')}</li>`;
+    }).join("");
+
+        let existingRow = document.querySelector(`tr[data-comanda-id="${comanda.id}"]`);
+
+        if (!existingRow) {
+            existingRow = document.createElement("tr");
+            existingRow.setAttribute('data-comanda-id', comanda.id);
+            comandasTableBody.appendChild(existingRow);
+        }
+
+        existingRow.innerHTML = `
+            <td>${comanda.mesa}</td>
+            <td>${comanda.tipoConsumo}</td>
+            <td>${comanda.observacao || ''}</td>
+            <td class="${comanda.status === 'ABERTA' ? 'status-aberta' : 'status-fechada'}">
+                <span>${comanda.status}</span>
+            </td>
+            <td><ul>${itensHTML}</ul></td>
+            <td>
+                ${comanda.status === 'ABERTA' ?
+            `<button type="button" class="btn-fechar-comanda" data-id="${comanda.id}">Fechar</button>` :
+            `Comanda Fechada`
+        }
+            </td>
+        `;
+
+        if (comanda.status === 'ABERTA') {
+            const fecharBtn = existingRow.querySelector('.btn-fechar-comanda');
+            if (fecharBtn) {
+                fecharBtn.addEventListener('click', () => fecharComanda(comanda.id));
+            }
+        }
+    }
+
+    async function carregarComandasAbertas() {
+        errorMessageDiv.textContent = '';
+        errorMessageDiv.style.display = 'none';
+        comandasTableBody.innerHTML = '';
+
+        try {
+            const response = await fetch(COMANDAS_API_URL);
+            if (response.ok) {
+                const comandas = await response.json();
+                comandas.forEach(renderizarComanda);
+            } else {
+                const errorText = await response.text();
+                errorMessageDiv.textContent = `Erro ao carregar comandas: ${errorText}`;
+                errorMessageDiv.style.display = 'block';
+            }
+        } catch (error) {
+            console.error('Erro de rede:', error);
+            errorMessageDiv.textContent = 'Erro de conexão ao carregar comandas.';
+            errorMessageDiv.style.display = 'block';
+        }
+    }
+
+    async function fecharComanda(comandaId) {
+        if (!confirm('Tem certeza que quer fechar esta comanda?')) {
+            return;
+        }
+        errorMessageDiv.textContent = '';
+        errorMessageDiv.style.display = 'none';
+
+        try {
+            const response = await fetch(`${COMANDAS_API_URL}/fechar/${comandaId}`, {
+                method: 'PUT'
+            });
+
+            if (response.ok) {
+
+            } else {
+                const errorText = await response.text();
+                errorMessageDiv.textContent = `Erro ao fechar comanda: ${errorText}`;
+                errorMessageDiv.style.display = 'block';
+            }
+        } catch (error) {
+            console.error('Erro de rede ao fechar comanda:', error);
+            errorMessageDiv.textContent = 'Erro de conexão ao fechar comanda.';
+            errorMessageDiv.style.display = 'block';
+        }
+    }
+
+    const SPRING_BOOT_WEBSOCKET_URL = 'http://localhost:8080/ws-comandas';
+    var socket = new SockJS(SPRING_BOOT_WEBSOCKET_URL);
+    var stompClient = Stomp.over(socket);
+
+    stompClient.connect({}, function (frame) {
+        console.log('Conectado ao WebSocket: ' + frame + ' em ' + SPRING_BOOT_WEBSOCKET_URL);
+        errorMessageDiv.style.display = 'none';
+
+        stompClient.subscribe('/topic/comandas', function (message) {
+            console.log("Nova mensagem de comanda (string JSON): ", message.body);
+            try {
+                const comandaAtualizada = JSON.parse(message.body);
+                console.log("Comanda atualizada (objeto): ", comandaAtualizada);
+                renderizarComanda(comandaAtualizada);
+            } catch (e) {
+                console.error("Erro ao processar mensagem WebSocket: ", e);
+                errorMessageDiv.textContent = 'Erro ao processar atualização em tempo real.';
+                errorMessageDiv.style.display = 'block';
+            }
+        });
+
+    }, function (error) {
+        console.error('Erro ao conectar WebSocket em ' + SPRING_BOOT_WEBSOCKET_URL + ': ', error);
+        errorMessageDiv.textContent = 'Não foi possível conectar ao serviço de atualização em tempo real. Verifique o console para detalhes.';
+        errorMessageDiv.style.display = 'block';
+
+    });
+
+    document.addEventListener('DOMContentLoaded', carregarComandasAbertas);
+    document.addEventListener('DOMContentLoaded', carregarComandasAbertas);
+</script>
+
+</body>
+</html>

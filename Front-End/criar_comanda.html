@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="PT-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Criar Comanda</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+<h1>Criar Comanda</h1>
+
+<div class="painel-lavanda">
+    <p id="comandaErrorMessage" class="erro" style="display: none;"></p>
+
+    <form id="addItemToComandaForm">
+        <label for="mesaComanda">Mesa:</label>
+        <input type="text" id="mesaComanda" placeholder="Informe o número da mesa" required/>
+
+        <label for="tipoConsumoComanda">Tipo Consumo:</label>
+        <select id="tipoConsumoComanda">
+            <option value="Local">Local</option>
+            <option value="Viagem">Viagem</option>
+        </select>
+
+        <label for="observacaoComanda">Observação:</label>
+        <input type="text" id="observacaoComanda" placeholder="Adicione observações"/>
+
+        <label for="itemCardapioSelect">Item:</label>
+        <select id="itemCardapioSelect">
+        </select>
+
+        <label for="quantidadeItem">Quantidade:</label>
+        <input type="number" id="quantidadeItem" min="1" value="1"/>
+
+        <button type="submit">Adicionar Item à Comanda</button>
+    </form>
+
+    <h2>Itens na Comanda:</h2>
+    <ul id="itensNaComandaList">
+    </ul>
+
+    <button type="button" id="finalizarComandaBtn">Finalizar Comanda</button>
+
+    <a href="/menu.html" class="btn-link">Voltar ao Menu</a>
+</div>
+
+<script>
+    const CARDAPIO_API_URL = 'http://localhost:8080/api/cardapio';
+    const COMANDAS_API_URL = 'http://localhost:8080/api/comandas';
+    const comandaErrorMessageDiv = document.getElementById('comandaErrorMessage');
+    const mesaComandaInput = document.getElementById('mesaComanda');
+    const tipoConsumoComandaSelect = document.getElementById('tipoConsumoComanda');
+    const observacaoComandaInput = document.getElementById('observacaoComanda');
+    const itemCardapioSelect = document.getElementById('itemCardapioSelect');
+    const quantidadeItemInput = document.getElementById('quantidadeItem');
+    const addItemToComandaForm = document.getElementById('addItemToComandaForm');
+    const itensNaComandaList = document.getElementById('itensNaComandaList');
+    const finalizarComandaBtn = document.getElementById('finalizarComandaBtn');
+
+    let comandaAtual = {
+        mesa: '',
+        tipoConsumo: 'Local',
+        observacao: '',
+        itens: []
+    };
+
+    let cardapioDisponivel = [];
+
+    async function carregarCardapioParaSelect() {
+        try {
+            const response = await fetch(CARDAPIO_API_URL);
+            if (response.ok) {
+                cardapioDisponivel = await response.json();
+                itemCardapioSelect.innerHTML = '';
+                cardapioDisponivel.forEach(item => {
+                    const option = document.createElement('option');
+                    option.value = item.id;
+                    option.textContent = `${item.nome} - R$ ${item.preco.toFixed(2)}`;
+                    itemCardapioSelect.appendChild(option);
+                });
+            } else {
+                const errorText = await response.text();
+                comandaErrorMessageDiv.textContent = `Erro ao carregar cardápio: Status ${response.status}`;
+                comandaErrorMessageDiv.style.display = 'block';
+            }
+        } catch (error) {
+            comandaErrorMessageDiv.textContent = 'Erro de conexão. Verifique se o back-end está rodando.';
+            comandaErrorMessageDiv.style.display = 'block';
+        }
+    }
+
+    function renderizarItensNaComanda() {
+        itensNaComandaList.innerHTML = '';
+        comandaAtual.itens.forEach((item, index) => {
+            const itemInfo = cardapioDisponivel.find(menuItem => menuItem.id === item.itemCardapio.id);
+            if (!itemInfo) return;
+
+            const li = document.createElement('li');
+            li.innerHTML = `
+                <span>${item.quantidade}x ${itemInfo.nome} - R$ ${itemInfo.preco.toFixed(2)}</span>
+                <button type="button" class="btn-remover-item" data-index="${index}" style="background-color: transparent; color: red; border: none; cursor: pointer;">✖</button>
+            `;
+            itensNaComandaList.appendChild(li);
+        });
+
+        document.querySelectorAll('.btn-remover-item').forEach(button => {
+            button.addEventListener('click', (event) => {
+                const index = parseInt(event.target.dataset.index, 10);
+                removerItemDaComanda(index);
+            });
+        });
+    }
+
+    addItemToComandaForm.addEventListener('submit', (event) => {
+        event.preventDefault();
+        const itemIdSelecionado = parseInt(itemCardapioSelect.value, 10);
+        const quantidade = parseInt(quantidadeItemInput.value, 10);
+
+        if (!itemIdSelecionado || quantidade <= 0) return;
+        
+        const itemExistente = comandaAtual.itens.find(item => item.itemCardapio.id === itemIdSelecionado);
+        if (itemExistente) {
+            itemExistente.quantidade += quantidade;
+        } else {
+            // AQUI ESTÁ A MUDANÇA PRINCIPAL E CORRETA
+            comandaAtual.itens.push({
+                quantidade: quantidade,
+                itemCardapio: {
+                    id: itemIdSelecionado
+                }
+            });
+        }
+        renderizarItensNaComanda();
+        quantidadeItemInput.value = 1;
+    });
+
+    function removerItemDaComanda(index) {
+        comandaAtual.itens.splice(index, 1);
+        renderizarItensNaComanda();
+    }
+
+    finalizarComandaBtn.addEventListener('click', async () => {
+        comandaErrorMessageDiv.textContent = '';
+        comandaErrorMessageDiv.style.display = 'none';
+
+        comandaAtual.mesa = mesaComandaInput.value;
+        comandaAtual.tipoConsumo = tipoConsumoComandaSelect.value;
+        comandaAtual.observacao = observacaoComandaInput.value;
+
+        if (!comandaAtual.mesa || comandaAtual.itens.length === 0) {
+            comandaErrorMessageDiv.textContent = 'Preencha a mesa e adicione itens.';
+            comandaErrorMessageDiv.style.display = 'block';
+            return;
+        }
+
+        try {
+            const response = await fetch(COMANDAS_API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(comandaAtual)
+            });
+
+            if (response.status === 201) {
+                alert('Comanda criada com sucesso!');
+                window.location.href = '/ver_comandas.html';
+            } else {
+                const errorText = await response.text();
+                comandaErrorMessageDiv.textContent = `Erro ao finalizar comanda: ${errorText}`;
+                comandaErrorMessageDiv.style.display = 'block';
+            }
+        } catch (error) {
+            comandaErrorMessageDiv.textContent = 'Erro de conexão ao finalizar comanda.';
+            comandaErrorMessageDiv.style.display = 'block';
+        }
+    });
+
+    document.addEventListener('DOMContentLoaded', carregarCardapioParaSelect);
+</script>
+</body>
+</html>

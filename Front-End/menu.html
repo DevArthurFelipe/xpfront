@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="PT-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Menu Principal</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+<div class="painel-menu">
+    <img src="/css/img/logo.png" alt="Logo" class="logo-menu">
+    <h1>Menu Principal</h1>
+
+    <div class="menu-botoes">
+        <a class="btn-menu" href="/criar_comanda.html">Criar Comanda</a>
+        <a class="btn-menu" href="/ver_comandas.html">Ver Comandas</a>
+        <a class="btn-menu" href="/cardapio.html">Gerenciar Cardápio</a>
+        <a class="btn-menu" href="/relatorio.html">Relatório de Vendas</a>
+        <a class="btn-menu encerrar" id="logoutBtn" href="#">Encerrar Sessão</a>
+    </div>
+</div>
+
+<script>
+    const logoutBtn = document.getElementById('logoutBtn');
+
+    logoutBtn.addEventListener('click', (event) => {
+        event.preventDefault();
+
+        localStorage.removeItem('loggedInUser');
+        alert('Sessão encerrada!');
+        window.location.href = '/login.html';
+    });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="PT-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Registrar Funcionário</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+<div class="painel-login">
+    <img src="/css/img/logo.png" alt="Logo" class="logo-login">
+    <h1>Registrar Funcionário</h1>
+
+    <form id="registroForm">
+        <label for="chave">Chave de acesso:</label>
+        <input type="password" name="chave" id="chave" required />
+
+        <label for="username">Usuário:</label>
+        <input type="text" id="username" name="username" required />
+
+        <label for="password">Senha:</label>
+        <input type="password" id="password" name="password" required />
+
+        <label for="cargo">Cargo:</label>
+        <input type="text" id="cargo" name="cargo" required />
+
+        <div class="btn-entrar-container">
+            <button type="submit" class="btn-entrar">Registrar</button>
+        </div>
+    </form>
+
+    <p id="errorMessage" class="erro" style="display: none;"></p>
+
+    <a href="/login.html" class="btn-secundario">Voltar ao Login</a>
+</div>
+
+<script>
+    const registroForm = document.getElementById('registroForm');
+    const chaveInput = document.getElementById('chave');
+    const usernameInput = document.getElementById('username');
+    const passwordInput = document.getElementById('password');
+    const cargoInput = document.getElementById('cargo');
+    const errorMessageDiv = document.getElementById('errorMessage');
+
+    registroForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+
+        errorMessageDiv.textContent = '';
+        errorMessageDiv.style.display = 'none';
+
+        const chave = chaveInput.value;
+        const username = usernameInput.value;
+        const password = passwordInput.value;
+        const cargo = cargoInput.value;
+
+        try {
+            const response = await fetch(`http://localhost:8080/api/registrar?chave=${chave}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ nome: username, senha: password, cargo: cargo })
+            });
+
+            if (response.status === 201) {
+                alert('Funcionário registrado com sucesso!');
+                window.location.href = '/login.html';
+            } else {
+                const errorText = await response.text();
+                errorMessageDiv.textContent = errorText || 'Erro ao registrar funcionário.';
+                errorMessageDiv.style.display = 'block';
+            }
+        } catch (error) {
+            console.error('Erro de rede:', error);
+            errorMessageDiv.textContent = 'Erro de conexão com o servidor. Tente novamente.';
+            errorMessageDiv.style.display = 'block';
+        }
+    });
+</script>
+
+</body>
+</html>

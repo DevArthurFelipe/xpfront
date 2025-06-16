@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="PT-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Iniciar Sessão</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+<div class="painel-login">
+    <img src="/css/img/logo.png" alt="Logo" class="logo-login">
+    <h1>Iniciar Sessão</h1>
+
+    <form id="loginForm">
+        <label for="username">Usuário:</label>
+        <input type="text" id="username" name="username" required/>
+
+        <label for="password">Senha:</label>
+        <input type="password" id="password" name="password" required/>
+
+        <div class="btn-entrar-container">
+            <button type="submit" class="btn-entrar">Entrar</button>
+        </div>
+    </form>
+
+    <p id="errorMessage" class="erro" style="display: none;"></p>
+
+    <a href="/registro.html" class="btn-secundario">Registrar novo funcionário</a>
+</div>
+
+<script>
+    const loginForm = document.getElementById('loginForm');
+    const usernameInput = document.getElementById('username');
+    const passwordInput = document.getElementById('password');
+    const errorMessageDiv = document.getElementById('errorMessage');
+
+    loginForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+
+        errorMessageDiv.textContent = '';
+        errorMessageDiv.style.display = 'none';
+
+        const username = usernameInput.value;
+        const password = passwordInput.value;
+
+        try {
+            const response = await fetch('http://localhost:8080/api/auth/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ nome: username, senha: password })
+            });
+
+            if (response.ok) {
+                const userData = await response.json();
+
+                localStorage.setItem('loggedInUser', JSON.stringify(userData));
+                window.location.href = '/menu.html';
+            } else {
+                const errorText = await response.text();
+                errorMessageDiv.textContent = errorText || 'Erro ao fazer login.';
+                errorMessageDiv.style.display = 'block';
+            }
+        } catch (error) {
+            console.error('Erro de rede:', error);
+            errorMessageDiv.textContent = 'Erro de conexão com o servidor. Tente novamente.';
+            errorMessageDiv.style.display = 'block';
+        }
+    });
+</script>
+
+</body>
+</html>

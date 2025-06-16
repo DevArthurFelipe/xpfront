@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="PT-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Gerenciar Cardápio</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+<h1>Gerenciar Cardápio</h1>
+
+<div class="painel-lavanda">
+    <form id="addItemForm">
+        <label for="chaveAcesso">Chave de Acesso:</label>
+        <input type="password" id="chaveAcesso" placeholder="Digite a chave de acesso" required/>
+
+        <label for="nomeItem">Nome do Item:</label>
+        <input type="text" id="nomeItem" placeholder="Ex: Hambúrguer" required/>
+
+        <label for="precoItem">Preço:</label>
+        <input type="number" id="precoItem" step="0.01" placeholder="Ex: 25.00" required/>
+
+        <button type="submit">Adicionar</button>
+    </form>
+
+    <p id="cardapioErrorMessage" class="erro" style="display: none;"></p>
+
+    <h2>Itens do Cardápio:</h2>
+    <ul id="listaItensCardapio">
+    </ul>
+
+    <a href="/menu.html" class="btn-link">Voltar ao Menu</a>
+</div>
+
+<script>
+    const CARDAPIO_API_URL = 'http://localhost:8080/api/cardapio';
+
+    const addItemForm = document.getElementById('addItemForm');
+    const chaveAcessoInput = document.getElementById('chaveAcesso');
+    const nomeItemInput = document.getElementById('nomeItem');
+    const precoItemInput = document.getElementById('precoItem');
+    const cardapioErrorMessageDiv = document.getElementById('cardapioErrorMessage');
+    const listaItensCardapioUl = document.getElementById('listaItensCardapio');
+
+    async function carregarCardapio() {
+        cardapioErrorMessageDiv.textContent = '';
+        cardapioErrorMessageDiv.style.display = 'none';
+        listaItensCardapioUl.innerHTML = '';
+
+        try {
+            const response = await fetch(CARDAPIO_API_URL);
+            if (response.ok) {
+                const itens = await response.json();
+                itens.forEach(item => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `
+                        <span>${item.nome} - R$ ${item.preco.toFixed(2).replace('.', ',')}</span>
+                        <button class="btn-link remover-item-btn" data-id="${item.id}">Remover</button>
+                    `;
+                    listaItensCardapioUl.appendChild(li);
+                });
+
+                document.querySelectorAll('.remover-item-btn').forEach(button => {
+                    button.addEventListener('click', (event) => {
+                        const itemId = event.target.dataset.id;
+                        if (confirm('Tem certeza que quer remover este item do cardápio?')) {
+                            removerItem(itemId);
+                        }
+                    });
+                });
+
+            } else {
+                const errorText = await response.text();
+                cardapioErrorMessageDiv.textContent = `Erro ao carregar cardápio: ${errorText}`;
+                cardapioErrorMessageDiv.style.display = 'block';
+            }
+        } catch (error) {
+            console.error('Erro de rede ao carregar cardápio:', error);
+            cardapioErrorMessageDiv.textContent = 'Erro de conexão ao carregar cardápio.';
+            cardapioErrorMessageDiv.style.display = 'block';
+        }
+    }
+
+    async function adicionarItem(event) {
+        event.preventDefault();
+
+        cardapioErrorMessageDiv.textContent = '';
+        cardapioErrorMessageDiv.style.display = 'none';
+
+        const chave = chaveAcessoInput.value;
+        const nome = nomeItemInput.value;
+        const preco = parseFloat(precoItemInput.value);
+
+        if (!nome || isNaN(preco) || preco <= 0) {
+            cardapioErrorMessageDiv.textContent = 'Por favor, preencha o nome e um preço válido para o item.';
+            cardapioErrorMessageDiv.style.display = 'block';
+            return;
+        }
+
+        try {
+            const response = await fetch(`${CARDAPIO_API_URL}?chave=${chave}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ nome, preco })
+            });
+
+            if (response.status === 201) {
+                nomeItemInput.value = '';
+                precoItemInput.value = '';
+                chaveAcessoInput.value = '';
+                carregarCardapio();
+            } else {
+                const errorText = await response.text();
+                try {
+                    const errorJson = JSON.parse(errorText);
+                    cardapioErrorMessageDiv.textContent = `Erro ao adicionar item: ${errorJson.message || errorText}`;
+                } catch (e) {
+                    cardapioErrorMessageDiv.textContent = `Erro ao adicionar item: ${errorText}`;
+                }
+                cardapioErrorMessageDiv.style.display = 'block';
+            }
+        } catch (error) {
+            console.error('Erro de rede ao adicionar item:', error);
+            cardapioErrorMessageDiv.textContent = 'Erro de conexão ao adicionar item.';
+            cardapioErrorMessageDiv.style.display = 'block';
+        }
+    }
+
+    async function removerItem(id) {
+        cardapioErrorMessageDiv.textContent = '';
+        cardapioErrorMessageDiv.style.display = 'none';
+
+        try {
+            const response = await fetch(`${CARDAPIO_API_URL}/${id}`, {
+                method: 'DELETE'
+            });
+
+            if (response.status === 204) {
+                carregarCardapio();
+            } else {
+                const errorText = await response.text();
+                cardapioErrorMessageDiv.textContent = `Erro ao remover item: ${errorText}`;
+                cardapioErrorMessageDiv.style.display = 'block';
+            }
+        } catch (error) {
+            console.error('Erro de rede ao remover item:', error);
+            cardapioErrorMessageDiv.textContent = 'Erro de conexão ao remover item.';
+            cardapioErrorMessageDiv.style.display = 'block';
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', carregarCardapio);
+    addItemForm.addEventListener('submit', adicionarItem);
+
+</script>
+</body>
+</html>
